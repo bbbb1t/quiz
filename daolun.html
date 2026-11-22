@@ -216,6 +216,32 @@ details.grp[open]>summary .ar{transform:rotate(90deg)}
 .kdrow-a{color:#CFCFCF;font-weight:900;font-size:15px}
 
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:56px 24px;line-height:1.9}
+.ava{width:38px;height:38px;border-radius:13px;border:2px solid var(--line);background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.ava.big{width:62px;height:62px;border-radius:20px;font-size:32px;box-shadow:0 4px 0 var(--line);cursor:default}
+.inp{width:100%;border:2px solid var(--line);border-radius:14px;padding:13px 14px;font-size:15px;
+  font-family:inherit;font-weight:600;color:var(--ink);margin-bottom:10px;outline:none;background:#fff}
+.inp:focus{border-color:var(--blue)}
+.line{font-size:11.5px;font-weight:900;color:#9A9A9A;letter-spacing:.08em;margin:16px 0 8px}
+.avapick{display:flex;flex-wrap:wrap;gap:8px}
+.avapick button{width:44px;height:44px;border-radius:14px;border:2px solid var(--line);background:#fff;
+  font-size:21px;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.avapick button.on{border-color:var(--green);box-shadow:0 3px 0 var(--green-d);background:#F1FFE6}
+.sw{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:#4B4B4B}
+.sw input{width:20px;height:20px;accent-color:#58CC02}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:6px 0 4px}
+.stats3 div{background:#FAFAFA;border:2px solid var(--line);border-radius:14px;padding:12px 6px;text-align:center}
+.stats3 b{display:block;font-size:20px;font-weight:900;letter-spacing:-.02em}
+.stats3 span{font-size:10.5px;color:#9A9A9A;font-weight:800}
+.tabs{display:flex;gap:8px;padding:14px 16px 4px}
+.tabs button{flex:1;border:2px solid var(--line);background:#fff;border-radius:13px;padding:10px 4px;
+  font-family:inherit;font-size:12.5px;font-weight:900;color:#7B7B7B;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.tabs button.on{background:#F1FFE6;border-color:var(--green);color:var(--green-d);box-shadow:0 3px 0 var(--green-d)}
+.rankrow{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.rankrow .rk{width:26px;text-align:center;font-weight:900;font-size:13px;color:#B5B5B5}
+.rankrow .rkava{font-size:20px}
+.rankrow b{font-size:14px;font-weight:900;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rankrow .rkval{font-size:12.5px;font-weight:900;color:var(--green-d)}
 .empty .big{font-size:40px;display:block;margin-bottom:10px}
 
 /* sheet */
@@ -246,6 +272,7 @@ details.grp[open]>summary .ar{transform:rotate(90deg)}
 (function(){
 "use strict";
 var DATA = JSON.parse(document.getElementById("appdata").textContent);
+var SUPA = { url: "https://qrvojlytsafciizxdami.supabase.co", key: "CONFIG_KEY" };
 var CH = DATA.chapters, KPS = DATA.kps, Q = DATA.questions;
 var QM = {}, KM = {}, CM = {};
 Q.forEach(function(q){ QM[q.id] = q; });
@@ -290,6 +317,96 @@ function kpStats(kid){ var k=KM[kid],d=0,r=0; k.qids.forEach(function(id){var x=
 function gStats(){ var d=0,r=0,w=0; Q.forEach(function(q){var x=store.rec[q.id]; if(x){d++; if(x.last==="right") r++; else w++;}}); return {total:Q.length,done:d,right:r,wrong:w}; }
 function dailyCount(){ var k=today(); return (store.daily[k]&&store.daily[k].n)||0; }
 
+
+/* ---------- cloud: auth ---------- */
+var AUTH_KEY = "quiz_auth_v1";
+var auth = loadAuth();
+function loadAuth(){
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); } catch(e){ return null; }
+}
+function saveAuth(){ try { localStorage.setItem(AUTH_KEY, JSON.stringify(auth)); } catch(e){} }
+function sbHeaders(extra){
+  var h = { "apikey": SUPA.key, "Content-Type": "application/json" };
+  if (auth && auth.access_token) h["Authorization"] = "Bearer " + auth.access_token;
+  else h["Authorization"] = "Bearer " + SUPA.key;
+  if (extra) for (var k in extra) h[k] = extra[k];
+  return h;
+}
+async function sbSignUp(email, password){
+  var r = await fetch(SUPA.url + "/auth/v1/signup", {
+    method: "POST", headers: sbHeaders(), body: JSON.stringify({ email: email, password: password })
+  });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.msg || j.error_description || j.message || "注册失败");
+  if (j.access_token) { auth = { access_token: j.access_token, refresh_token: j.refresh_token, user: j.user }; saveAuth(); await ensureProfile(); return true; }
+  return false; // 需要邮箱确认
+}
+async function sbSignIn(email, password){
+  var r = await fetch(SUPA.url + "/auth/v1/token?grant_type=password", {
+    method: "POST", headers: sbHeaders(), body: JSON.stringify({ email: email, password: password })
+  });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error_description || j.msg || "登录失败");
+  auth = { access_token: j.access_token, refresh_token: j.refresh_token, user: j.user };
+  saveAuth(); await ensureProfile(); return true;
+}
+function sbSignOut(){ auth = null; saveAuth(); }
+async function sbRefresh(){
+  if (!auth || !auth.refresh_token) return false;
+  try {
+    var r = await fetch(SUPA.url + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST", headers: sbHeaders(), body: JSON.stringify({ refresh_token: auth.refresh_token })
+    });
+    if (!r.ok) return false;
+    var j = await r.json();
+    auth.access_token = j.access_token; auth.refresh_token = j.refresh_token; saveAuth(); return true;
+  } catch(e){ return false; }
+}
+async function sbFetch(path, opts){
+  opts = opts || {};
+  var r = await fetch(SUPA.url + path, {
+    method: opts.method || "GET",
+    headers: sbHeaders(opts.headers), body: opts.body
+  });
+  if (r.status === 401) { if (await sbRefresh()) return sbFetch(path, opts); }
+  return r;
+}
+async function ensureProfile(){
+  if (!auth || !auth.user) return;
+  await sbFetch("/rest/v1/profiles?on_conflict=id", {
+    method: "POST",
+    headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify([{ id: auth.user.id, nickname: (auth.profile && auth.profile.nickname) || ("同学" + String(auth.user.id).slice(0,4)), avatar: (auth.profile && auth.profile.avatar) || "🦉", public_rank: auth.profile ? auth.profile.public_rank : true }])
+  });
+  var r = await sbFetch("/rest/v1/profiles?id=eq." + auth.user.id + "&select=*");
+  if (r.ok) { var rows = await r.json(); if (rows && rows[0]) { auth.profile = rows[0]; saveAuth(); } }
+}
+function myStats(course){
+  var done=0, right=0, wrong=0, answers=0;
+  Q.forEach(function(q){
+    var r = store.rec[q.id];
+    if (r) { done++; if (r.last==="right") right++; else wrong++; answers += (r.c||0)+(r.w||0); }
+  });
+  return { course: course, done: done, total: Q.length, right_cnt: right, wrong_cnt: wrong, answers: answers };
+}
+var syncTimer = null;
+function queueSync(){
+  if (!auth) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(doSync, 1200);
+}
+async function doSync(){
+  if (!auth) return;
+  var st = myStats(DATA.course);
+  try {
+    await sbFetch("/rest/v1/stats?on_conflict=uid,course", {
+      method: "POST",
+      headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify([{ uid: auth.user.id, course: st.course, done: st.done, total: st.total, right_cnt: st.right_cnt, wrong_cnt: st.wrong_cnt, answers: st.answers }])
+    });
+  } catch(e){}
+}
+
 /* ---------- home ---------- */
 var GOAL = 20;
 function viewHome(){
@@ -299,7 +416,10 @@ function viewHome(){
     +'<svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#58CC02"/><text x="32" y="44" font-size="26" font-weight="bold" text-anchor="middle" fill="#fff" font-family="sans-serif">✓</text></svg>'
     +esc(DATA.course)+'</div><span class="spacer"></span>'
     +'<span class="pill">🔥 '+dn+'</span>'
-    +'<button class="iconbtn" data-act="settings" title="进度与设置">⚙</button></div>';
+    +'<button class="iconbtn" data-act="settings" title="进度与设置">⚙</button>'
+    +(auth ? '<button class="ava" data-act="me" title="我的">'+esc((auth.profile&&auth.profile.avatar)||'🦉')+'</button>'
+           : '<button class="btn small primary" data-act="login" style="padding:8px 12px">登录</button>')
+    +'</div>';
 
   h+='<div class="daily"><div class="ring">'+ring(Math.min(1,dn/GOAL),76,9,"#58CC02","#EDEDED")
     +'<b>'+dn+'<small>/'+GOAL+'</small></b></div>'
@@ -312,6 +432,10 @@ function viewHome(){
     +'<button data-act="random"><em>🎲</em>随机</button>'
     +'<button data-act="wrong"><em>✏️</em>错题</button>'
     +'<button data-act="fav"><em>⭐</em>收藏</button>'
+    +'</div>'
+    +'<div class="quick" style="grid-template-columns:repeat(2,1fr);margin-top:9px">'
+    +'<button data-act="rank" style="flex-direction:row;gap:8px;padding:12px"><em style="background:#FFF3D6">🏆</em>排行榜</button>'
+    +'<button data-act="me" style="flex-direction:row;gap:8px;padding:12px"><em style="background:#EAF7FF">👤</em>我的档案</button>'
     +'</div>';
 
   if(DATA.kaodian && DATA.kaodian.length){
@@ -426,6 +550,7 @@ function commit(q,ok,picked,revealed){
   r.last = ok?"right":"wrong";
   store.rec[q.id]=r;
   if(ok) S.stat.r++; else S.stat.w++;
+  queueSync();
   var k=today(); store.daily[k]=store.daily[k]||{n:0}; store.daily[k].n++;
   save(); render();
 }
@@ -552,6 +677,84 @@ function openSettings(){
 }
 function closeSheet(){ $("#sheetWrap").hidden=true; }
 
+
+/* ---------- views: auth / me / rank ---------- */
+function viewAuth(mode){
+  mode = mode || "login";
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">'+(mode==="login"?"登录":"注册")+'</div><span style="width:38px"></span></div>';
+  h+='<div style="padding:20px 18px">'
+    +'<div style="font-size:20px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px">'
+    +(mode==="login"?"登录后进排行榜":"创建账号，一起卷")+'</div>'
+    +'<div style="font-size:12.5px;color:#9A9A9A;margin-bottom:18px">账号只用来存昵称、战绩和排名；不登录也能刷题，进度只在本机。</div>'
+    +'<input id="authEmail" class="inp" type="email" placeholder="邮箱" autocomplete="email">'
+    +'<input id="authPass" class="inp" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password">'
+    +'<button class="btn primary wide" style="margin-top:6px" data-act="'+(mode==="login"?"doLogin":"doSignup")+'">'
+    +(mode==="login"?"登录":"注册并登录")+'</button>'
+    +'<button class="btn ghost wide" style="margin-top:9px" data-act="'+(mode==="login"?"signup":"login")+'">'
+    +(mode==="login"?"没有账号？注册":"已有账号？去登录")+'</button>'
+    +'<div id="authMsg" style="margin-top:12px;font-size:12.5px;color:#D33131;text-align:center"></div>'
+    +'<div class="kdnote" style="margin:18px 0 0">注册后请去「我的档案」设置昵称和头像。</div>'
+    +'</div>';
+  return h;
+}
+function viewMe(){
+  if(!auth) return viewAuth("login");
+  var p = auth.profile || {};
+  var st = myStats(DATA.course);
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">我的档案</div><span style="width:38px"></span></div>';
+  h+='<div style="padding:18px">'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
+    +'<div class="ava big">'+esc(p.avatar||'🦉')+'</div>'
+    +'<div><div style="font-size:17px;font-weight:900">'+esc(p.nickname||'同学')+'</div>'
+    +'<div style="font-size:11.5px;color:#9A9A9A">'+esc(auth.user.email)+'</div></div></div>'
+    +'<div class="stats3"><div><b>'+st.done+'</b><span>已练</span></div><div><b>'+st.right_cnt+'</b><span>答对</span></div>'
+    +'<div><b>'+(st.answers?Math.round(st.right_cnt/st.answers*100):0)+'%</b><span>正确率</span></div></div>'
+    +'<div class="line">昵称</div><input id="nickInput" class="inp" maxlength="12" value="'+esc(p.nickname||'')+'" placeholder="最多 12 字">'
+    +'<div class="line">头像</div><div class="avapick">';
+  ["🦉","🩺","🐧","🐱","🦊","🐼","🐨","🦁","🐸","🐙","🚀","🩵","🧠","📚","⚡","🍀"].forEach(function(e){
+    h+='<button data-avatar="'+e+'" class="'+(p.avatar===e?"on":"")+'">'+e+'</button>';
+  });
+  h+='</div>'
+    +'<div class="line">隐私</div>'
+    +'<label class="sw"><input type="checkbox" id="pubRank" '+(p.public_rank===false?"":"checked")+'> 在排行榜显示我的战绩</label>'
+    +'<div class="kdnote" style="margin:8px 0 0">关掉后你仍然能看别人的排名，但自己不会出现在榜上。邮箱永远不会公开。</div>'
+    +'<button class="btn primary wide" style="margin-top:16px" data-act="saveProfile">保存</button>'
+    +'<button class="btn ghost wide" style="margin-top:9px" data-act="logout">退出登录</button>'
+    +'</div>';
+  return h;
+}
+var rankTab = "done";
+function viewRank(){
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">排行榜</div><span style="width:38px"></span></div>';
+  h+='<div class="tabs">'
+    +'<button class="'+(rankTab==="done"?"on":"")+'" data-rank="done">学习进度</button>'
+    +'<button class="'+(rankTab==="answers"?"on":"")+'" data-rank="answers">练习次数</button>'
+    +'<button class="'+(rankTab==="acc"?"on":"")+'" data-rank="acc">正确率</button>'
+    +'</div><div id="rankList" class="list"><div class="empty">加载中…</div></div>';
+  return h;
+}
+async function loadRank(){
+  var box = document.getElementById("rankList");
+  if(!box) return;
+  var order = rankTab==="done" ? "done" : (rankTab==="answers" ? "answers" : "acc");
+  try{
+    var r = await sbFetch("/rest/v1/leaderboard?course=eq." + encodeURIComponent(DATA.course)
+      + "&public_rank=eq.true&select=nickname,avatar,done,total,right_cnt,answers,acc&order=" + order + ".desc,answers.desc&limit=50");
+    var rows = await r.json();
+    if(!Array.isArray(rows) || !rows.length){ box.innerHTML='<div class="empty"><span class="big">🏆</span>还没有人上榜<br>你注册后刷几题就能进榜</div>'; return; }
+    var h='';
+    rows.forEach(function(row,i){
+      var val = rankTab==="done" ? (row.done + "/" + row.total)
+              : rankTab==="answers" ? (row.answers + " 次")
+              : (row.acc + "%");
+      var medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+      h+='<div class="item rankrow"><span class="rk">'+medal+'</span><span class="rkava">'+esc(row.avatar||"🦉")+'</span>'
+        +'<b>'+esc(row.nickname||"同学")+'</b><span class="rkval">'+val+'</span></div>';
+    });
+    box.innerHTML = h;
+  }catch(e){ box.innerHTML='<div class="empty">加载失败，检查网络</div>'; }
+}
+
 /* ---------- render ---------- */
 function render(){
   var app=$("#app");
@@ -562,6 +765,9 @@ function render(){
   else if(S.view==="kd") app.innerHTML=viewKD();
   else if(S.view==="wrong") app.innerHTML=viewWrong();
   else if(S.view==="fav") app.innerHTML=viewFav();
+  else if(S.view==="auth") app.innerHTML=viewAuth(S.authMode||"login");
+  else if(S.view==="me") app.innerHTML=viewMe();
+  else if(S.view==="rank"){ app.innerHTML=viewRank(); loadRank(); }
   window.scrollTo(0,0);
   bind();
   if(S.view==="study" && HAS_LS){ store.resume={deck:S.deck,idx:S.idx,ans:S.ans,title:S.title}; save(); }
@@ -586,6 +792,12 @@ function bind(){
     el.onclick=function(){ var k=(DATA.kaodian||[]).filter(function(x){return x.id===el.dataset.kdall;})[0];
       if(k&&k.allQids) startDeck(k.allQids.slice(),k.name+"（含免考）"); };
   });
+  app.querySelectorAll("[data-avatar]").forEach(function(el){
+    el.onclick=function(){ app.querySelectorAll(".avapick button").forEach(function(b){ b.classList.remove("on"); }); el.classList.add("on"); };
+  });
+  app.querySelectorAll("[data-rank]").forEach(function(el){
+    el.onclick=function(){ rankTab=el.dataset.rank; S.view="rank"; render(); };
+  });
   app.querySelectorAll("[data-jump]").forEach(function(el){
     el.onclick=function(){ startDeck([el.dataset.jump],"单题重做"); };
   });
@@ -598,10 +810,44 @@ function bind(){
     };
   });
   app.querySelectorAll("[data-act]").forEach(function(el){
-    el.onclick=function(){
+    el.onclick=async function(){
       var act=el.dataset.act;
       if(act==="home"){ S.view="home"; render(); }
       else if(act==="settings"){ openSettings(); }
+      else if(act==="login"){ S.authMode="login"; S.view="auth"; render(); }
+      else if(act==="signup"){ S.authMode="signup"; S.view="auth"; render(); }
+      else if(act==="me"){ S.view="me"; render(); }
+      else if(act==="rank"){ S.view="rank"; render(); }
+      else if(act==="logout"){ if(confirm("退出登录？本机进度会保留。")){ sbSignOut(); S.view="home"; render(); } }
+      else if(act==="doLogin" || act==="doSignup"){
+        var em=$("#authEmail").value.trim(), pw=$("#authPass").value;
+        var msg=$("#authMsg");
+        if(!em || pw.length<6){ msg.textContent="邮箱和至少 6 位密码"; return; }
+        msg.textContent="处理中…"; msg.style.color="#9A9A9A";
+        try{
+          if(act==="doSignup"){
+            var done = await sbSignUp(em,pw);
+            if(!done) throw new Error("注册成功，但需要邮箱确认——请到邮箱点确认链接后再登录");
+          } else { await sbSignIn(em,pw); }
+          await doSync(); S.view="home"; render(); toast("已登录");
+        }catch(e){ msg.textContent=e.message; msg.style.color="#D33131"; }
+      }
+      else if(act==="saveProfile"){
+        var nick=$("#nickInput").value.trim().slice(0,12) || "同学";
+        var pub=$("#pubRank").checked;
+        var av=(auth.profile&&auth.profile.avatar)||"🦉";
+        var sel=document.querySelector(".avapick .on"); if(sel) av=sel.dataset.avatar;
+        auth.profile = Object.assign({}, auth.profile, {nickname:nick, avatar:av, public_rank:pub});
+        saveAuth();
+        try{
+          await sbFetch("/rest/v1/profiles?on_conflict=id",{
+            method:"POST", headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},
+            body: JSON.stringify([{id:auth.user.id, nickname:nick, avatar:av, public_rank:pub}])
+          });
+          toast("已保存");
+        }catch(e){ toast("保存失败，稍后再试"); }
+        render();
+      }
       else if(act==="import"){
         var box=$("#impBox"), v=(box&&box.value||"").trim();
         if(v.indexOf("ZHS1-")!==0){ toast("进度码格式不对"); return; }
