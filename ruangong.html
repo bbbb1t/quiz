@@ -109,7 +109,7 @@ body{
 .node.done{background:var(--gold)!important;color:#7A5B00;box-shadow:0 6px 0 #D9A800}
 .step .label{font-size:12.5px;font-weight:800;color:var(--ink2);text-align:center;max-width:150px}
 .step .label small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:2px}
-.step .start{background:var(--green);color:#fff;font-size:11px;font-weight:900;padding:5px 11px;border-radius:11px;
+.step button.start{border:0;font-family:inherit;cursor:pointer;background:var(--green);color:#fff;font-size:11px;font-weight:900;padding:6px 12px;border-radius:11px;
   box-shadow:0 3px 0 var(--green-d);margin-top:-2px}
 
 /* ---------- study ---------- */
@@ -215,10 +215,21 @@ details.grp[open]>summary .ar{transform:rotate(90deg)}
 .kdrow-n{margin-left:auto;font-size:11.5px;color:#9A9A9A;font-weight:800}
 .kdrow-a{color:#CFCFCF;font-weight:900;font-size:15px}
 
+.menu-list{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.mi{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid var(--line);
+  background:#fff;border-radius:14px;padding:13px 14px;font-family:inherit;font-size:14px;font-weight:800;
+  color:var(--ink);cursor:pointer;text-decoration:none;box-shadow:0 3px 0 var(--line)}
+.mi:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.mi span{font-size:18px;width:24px;text-align:center}
+.mi i{margin-left:auto;font-style:normal;color:#C9C9C9;font-weight:900}
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:56px 24px;line-height:1.9}
 .ava{width:38px;height:38px;border-radius:13px;border:2px solid var(--line);background:#fff;
   display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;box-shadow:0 3px 0 var(--line)}
 .ava.big{width:62px;height:62px;border-radius:20px;font-size:32px;box-shadow:0 4px 0 var(--line);cursor:default}
+.avaimg-wrap{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;padding:0}
+.avaimg{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.ava .avaimg-wrap{width:100%;height:100%;border-radius:inherit}
+.rkava .avaimg-wrap{width:26px;height:26px;border-radius:8px;display:inline-flex}
 .inp{width:100%;border:2px solid var(--line);border-radius:14px;padding:13px 14px;font-size:15px;
   font-family:inherit;font-weight:600;color:var(--ink);margin-bottom:10px;outline:none;background:#fff}
 .inp:focus{border-color:var(--blue)}
@@ -414,12 +425,12 @@ var GOAL = 20;
 function viewHome(){
   var g=gStats(), dn=dailyCount();
   var h='';
-  h+='<div class="hhead"><div class="logo">'
+  h+='<div class="hhead"><button class="iconbtn" data-act="menu" title="菜单">☰</button><div class="logo">'
     +'<svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#58CC02"/><text x="32" y="44" font-size="26" font-weight="bold" text-anchor="middle" fill="#fff" font-family="sans-serif">✓</text></svg>'
     +esc(DATA.course)+'</div><span class="spacer"></span>'
     +'<span class="pill">🔥 '+dn+'</span>'
     +'<button class="iconbtn" data-act="settings" title="进度与设置">⚙</button>'
-    +(auth ? '<button class="ava" data-act="me" title="我的">'+esc((auth.profile&&auth.profile.avatar)||'🦉')+'</button>'
+    +(auth ? '<button class="ava" data-act="me" title="我的">'+avaHtml((auth.profile&&auth.profile.avatar))+'</button>'
            : '<button class="btn small primary" data-act="login" style="padding:8px 12px">登录</button>')
     +'</div>';
 
@@ -457,7 +468,7 @@ function viewHome(){
       +'style="background:'+(full?'':'linear-gradient(180deg,'+c.color+',shade)')+';background-color:'+c.color+'">'
       +'<span class="pct">'+(full?'★':p+'%')+'</span></button>'
       +'<div class="label">'+esc(c.name)+'<small>'+st.total+' 题 · 已掌握 '+st.right+'</small></div>'
-      +(i===0?'<div class="start">START</div>':'')+'</div>';
+      +'<button class="start" data-ch="'+c.id+'">'+(i===0?'START':'进入')+'</button></div>';
   });
   h+='</div></div>';
   return h;
@@ -553,6 +564,7 @@ function commit(q,ok,picked,revealed){
   r.last = ok?"right":"wrong";
   store.rec[q.id]=r;
   if(ok) S.stat.r++; else S.stat.w++;
+  sfx(ok ? "ok" : "bad");
   queueSync();
   var k=today(); store.daily[k]=store.daily[k]||{n:0}; store.daily[k].n++;
   save(); render();
@@ -560,9 +572,10 @@ function commit(q,ok,picked,revealed){
 
 /* ---------- summary ---------- */
 function viewSummary(){
+  sfx("win");
   var t=S.stat.r+S.stat.w, secs=Math.max(1,Math.round((Date.now()-S.t0)/1000));
   var mm=Math.floor(secs/60), ss=secs%60;
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">本轮完成</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">本轮完成</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div class="sum"><div style="display:inline-block">'+ring(S.stat.r/Math.max(1,t),132,11,"#58CC02","#EDEDED")+'</div>';
   h+='<h2>'+pct(S.stat.r,t)+'% 正确</h2><p>'+esc(S.title||"本轮练习")+'</p>';
   h+='<div class="sumstats"><div><b>'+t+'</b>题数</div><div><b style="color:#58CC02">'+S.stat.r+'</b>答对</div>'
@@ -574,7 +587,7 @@ function viewSummary(){
 
 /* ---------- kp ---------- */
 function viewKP(){
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">知识点</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">知识点</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div class="kdnote" style="margin-top:12px">点知识点只练这一组；进度按「最近一次是否答对」算。</div><div class="list" style="gap:10px">';
   CH.forEach(function(c,i){
     var cs=chStats(c.id);
@@ -594,7 +607,7 @@ function viewKP(){
 
 /* ---------- kd ---------- */
 function viewKD(){
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">期末重点</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">期末重点</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div class="kdnote" style="margin-top:12px">依据郝杰老师《重点复习.pptx》（147 页）整理。</div><div class="list">';
   (DATA.kaodian||[]).forEach(function(k){
     h+='<div class="kdcard"><div class="top"><span class="chip key">★ 重点</span><span class="nm">'+esc(k.name)+'</span>'
@@ -615,7 +628,7 @@ function viewKD(){
 /* ---------- wrong ---------- */
 function viewWrong(){
   var bad=Q.filter(function(q){var r=store.rec[q.id]; return r&&r.last==="wrong";});
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">错题本</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">错题本</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   if(!bad.length){ h+='<div class="empty"><span class="big">🎉</span>还没有错题<br>做几道，答错的会自动收进来</div>'; return h; }
   h+='<div style="margin:12px 16px"><button class="btn primary wide" data-act="wrong-start">复习这 '+bad.length+' 道错题</button></div>';
   h+='<div class="list">';
@@ -630,7 +643,7 @@ function viewWrong(){
 /* ---------- fav ---------- */
 function viewFav(){
   var favs=store.fav.filter(function(id){ return QM[id]; });
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">收藏</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">收藏</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   if(!favs.length){ h+='<div class="empty"><span class="big">⭐</span>还没有收藏<br>答题时点右上角星标，题目会收到这里</div>'; return h; }
   h+='<div style="margin:12px 16px"><button class="btn primary wide" data-act="fav-start">练这 '+favs.length+' 道收藏题</button></div>';
   h+='<div class="list">';
@@ -644,6 +657,28 @@ function viewFav(){
 }
 
 /* ---------- sheet ---------- */
+function otherCourse(){
+  var c = String(DATA.course || "");
+  if (/软件工程/.test(c)) return {href:"daolun.html", name:"人工智能导论", icon:"🤖"};
+  return {href:"ruangong.html", name:"医学软件工程", icon:"🩺"};
+}
+function openMenu(){
+  var o = otherCourse();
+  var h = '<h3>菜单</h3><div class="sub">切换课程会跳到另一门课的页面，进度各自独立。</div>';
+  h += '<div class="menu-list">';
+  h += '<button class="mi" data-act="close"><span>🏠</span>回到本课首页</button>';
+  h += '<a class="mi" href="' + o.href + '"><span>' + o.icon + '</span>切到《' + o.name + '》<i>›</i></a>';
+  h += '<a class="mi" href="index.html"><span>🗂</span>选课页（全部课程）<i>›</i></a>';
+  h += '<button class="mi" data-act="rank"><span>🏆</span>排行榜<i>›</i></button>';
+  h += '<button class="mi" data-act="me"><span>👤</span>我的档案<i>›</i></button>';
+  h += '<button class="mi" data-act="kp"><span>📚</span>知识点<i>›</i></button>';
+  h += '<button class="mi" data-act="wrong"><span>✏️</span>错题本<i>›</i></button>';
+  h += '<button class="mi" data-act="fav"><span>⭐</span>收藏<i>›</i></button>';
+  h += '<button class="mi" data-act="settings"><span>⚙</span>设置与备份<i>›</i></button>';
+  h += '</div>';
+  $("#sheet").innerHTML = h;
+  $("#sheetWrap").hidden = false;
+}
 function openKP(kid){
   var k=KM[kid]; if(!k) return;
   var ks=kpStats(kid), c=CM[k.ch], others=c.kps.filter(function(x){return x.id!==kid;});
@@ -675,7 +710,9 @@ function openSettings(){
       +'<button class="btn blue" style="flex:1.2" data-act="import">导入</button></div>';
     h+='<div class="kdnote" style="margin-top:12px">小提示：把这份 html 发给自己时，只要文件名和打开方式不变，进度就还在。</div>';
   }
-  h+='<div class="line">重置</div><div style="display:flex;gap:9px"><button class="btn ghost small" data-act="reset">清空全部进度</button></div>';
+  h+='<div class="line">音效</div>'
+    +'<label class="sw"><input type="checkbox" id="sfxBox" '+(SFX_ON?"checked":"")+'> 答题音效（答对/答错/完成）</label>'
+    +'<div class="line">重置</div><div style="display:flex;gap:9px"><button class="btn ghost small" data-act="reset">清空全部进度</button></div>';
   $("#sheet").innerHTML=h; $("#sheetWrap").hidden=false;
 }
 function closeSheet(){ $("#sheetWrap").hidden=true; }
@@ -684,7 +721,7 @@ function closeSheet(){ $("#sheetWrap").hidden=true; }
 /* ---------- views: auth / me / rank ---------- */
 function viewAuth(mode){
   mode = mode || "login";
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">'+(mode==="login"?"登录":"注册")+'</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">'+(mode==="login"?"登录":"注册")+'</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div style="padding:20px 18px">'
     +'<div style="font-size:20px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px">'
     +(mode==="login"?"登录后进排行榜":"创建账号，一起卷")+'</div>'
@@ -704,10 +741,10 @@ function viewMe(){
   if(!auth) return viewAuth("login");
   var p = auth.profile || {};
   var st = myStats(DATA.course);
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">我的档案</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">我的档案</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div style="padding:18px">'
     +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
-    +'<div class="ava big">'+esc(p.avatar||'🦉')+'</div>'
+    +'<div class="ava big">'+avaHtml(p.avatar)+'</div>'
     +'<div><div style="font-size:17px;font-weight:900">'+esc(p.nickname||'同学')+'</div>'
     +'<div style="font-size:11.5px;color:#9A9A9A">'+esc(auth.user.email)+'</div></div></div>'
     +'<div class="stats3"><div><b>'+st.done+'</b><span>已练</span></div><div><b>'+st.right_cnt+'</b><span>答对</span></div>'
@@ -718,6 +755,10 @@ function viewMe(){
     h+='<button data-avatar="'+e+'" class="'+(p.avatar===e?"on":"")+'">'+e+'</button>';
   });
   h+='</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center">'
+    +'<button class="btn ghost small" data-act="pickAvatar">上传自己的图片</button>'
+    +'<span style="font-size:11px;color:#9A9A9A">jpg/png，自动裁成方形</span></div>'
+    +'<input id="avaFile" type="file" accept="image/*" style="display:none">'
     +'<div class="line">隐私</div>'
     +'<label class="sw"><input type="checkbox" id="pubRank" '+(p.public_rank===false?"":"checked")+'> 在排行榜显示我的战绩</label>'
     +'<div class="kdnote" style="margin:8px 0 0">关掉后你仍然能看别人的排名，但自己不会出现在榜上。邮箱永远不会公开。</div>'
@@ -728,7 +769,7 @@ function viewMe(){
 }
 var rankTab = "done";
 function viewRank(){
-  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">排行榜</div><span style="width:38px"></span></div>';
+  var h='<div class="top"><button class="iconbtn" data-act="home">←</button><div class="ttl">排行榜</div><button class="iconbtn" data-act="menu" title="菜单">☰</button></div>';
   h+='<div class="tabs">'
     +'<button class="'+(rankTab==="done"?"on":"")+'" data-rank="done">学习进度</button>'
     +'<button class="'+(rankTab==="answers"?"on":"")+'" data-rank="answers">练习次数</button>'
@@ -751,7 +792,7 @@ async function loadRank(){
               : rankTab==="answers" ? (row.answers + " 次")
               : (row.acc + "%");
       var medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
-      h+='<div class="item rankrow"><span class="rk">'+medal+'</span><span class="rkava">'+esc(row.avatar||"🦉")+'</span>'
+      h+='<div class="item rankrow"><span class="rk">'+medal+'</span><span class="rkava">'+avaHtml(row.avatar)+'</span>'
         +'<b>'+esc(row.nickname||"同学")+'</b><span class="rkval">'+val+'</span></div>';
     });
     box.innerHTML = h;
@@ -795,6 +836,10 @@ function bind(){
     el.onclick=function(){ var k=(DATA.kaodian||[]).filter(function(x){return x.id===el.dataset.kdall;})[0];
       if(k&&k.allQids) startDeck(k.allQids.slice(),k.name+"（含免考）"); };
   });
+  var sb = document.getElementById("sfxBox");
+  if (sb) sb.onchange = function(){ SFX_ON = sb.checked; localStorage.setItem("quiz_sound", SFX_ON ? "1" : "0"); if(SFX_ON) sfx("tap"); };
+  var af = document.getElementById("avaFile");
+  if (af) af.onchange = function(){ pickAvatar(af.files && af.files[0]); };
   app.querySelectorAll("[data-avatar]").forEach(function(el){
     el.onclick=function(){ app.querySelectorAll(".avapick button").forEach(function(b){ b.classList.remove("on"); }); el.classList.add("on"); };
   });
@@ -807,6 +852,7 @@ function bind(){
   app.querySelectorAll("[data-opt]").forEach(function(el){
     el.onclick=function(){
       var q=QM[S.deck[S.idx]]; if(S.ans[q.id]) return;
+      sfx("tap");
       if(q.kind==="multi"){ var k=el.dataset.opt,i=S.pick.indexOf(k); if(i>=0) S.pick.splice(i,1); else S.pick.push(k); render(); return; }
       var picked=(q.kind==="judge")?el.dataset.txt:el.dataset.opt;
       commit(q,judge(q,picked),picked,false);
@@ -835,6 +881,11 @@ function bind(){
           await doSync(); S.view="home"; render(); toast("已登录");
         }catch(e){ msg.textContent=e.message; msg.style.color="#D33131"; }
       }
+      else if(act==="menu"){ openMenu(); }
+      else if(act==="pickAvatar"){
+        var f = $("#avaFile");
+        if (f) f.click();
+      }
       else if(act==="saveProfile"){
         var nick=$("#nickInput").value.trim().slice(0,12) || "同学";
         var pub=$("#pubRank").checked;
@@ -850,6 +901,9 @@ function bind(){
           toast("已保存");
         }catch(e){ toast("保存失败，稍后再试"); }
         render();
+      }
+      else if(act==="toggleSfx"){
+        SFX_ON = !SFX_ON; localStorage.setItem("quiz_sound", SFX_ON ? "1" : "0"); sfx("tap"); render();
       }
       else if(act==="import"){
         var box=$("#impBox"), v=(box&&box.value||"").trim();
@@ -893,6 +947,54 @@ function bind(){
         startDeck(w.length?w:S.deck.slice(), w.length?"错题重做":S.title); }
     };
   });
+}
+var SFX_ON = (localStorage.getItem("quiz_sound") !== "0");
+var _AC = null;
+function _ac(){ if(!_AC){ try{ _AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } return _AC; }
+function _beep(freq, dur, type, vol, delay){
+  if(!SFX_ON) return;
+  var c = _ac(); if(!c) return;
+  var t0 = c.currentTime + (delay || 0);
+  var o = c.createOscillator(), g = c.createGain();
+  o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol || 0.07, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0 + dur);
+}
+function sfx(kind){
+  if(!SFX_ON) return;
+  if(kind === "tap"){ _beep(760, .06, "triangle", .045); }
+  else if(kind === "ok"){ _beep(660, .1, "sine", .07); _beep(880, .16, "sine", .07, .09); }
+  else if(kind === "bad"){ _beep(220, .16, "sawtooth", .05); _beep(165, .22, "sawtooth", .045, .1); }
+  else if(kind === "win"){ _beep(523, .12, "sine", .07); _beep(659, .12, "sine", .07, .12); _beep(784, .2, "sine", .08, .24); }
+}
+function avaHtml(v, cls){
+  v = v || "🦉";
+  if (String(v).indexOf("data:image") === 0) {
+    return '<span class="' + (cls||"") + ' avaimg-wrap"><img class="avaimg" src="' + v + '" alt="头像"></span>';
+  }
+  return esc(v);
+}
+function pickAvatar(file){
+  if (!file) return;
+  var fr = new FileReader();
+  fr.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var c = document.createElement("canvas");
+      c.width = 160; c.height = 160;
+      var ctx = c.getContext("2d");
+      var side = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, 160, 160);
+      var uri = c.toDataURL("image/webp", 0.85);
+      auth.profile = Object.assign({}, auth.profile, {avatar: uri});
+      saveAuth(); render(); toast("头像已更新，记得点保存");
+    };
+    img.src = e.target.result;
+  };
+  fr.readAsDataURL(file);
 }
 function toggleFav(){
   var q=QM[S.deck[S.idx]], i=store.fav.indexOf(q.id);

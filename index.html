@@ -3,55 +3,188 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="theme-color" content="#58CC02"/>
+<meta name="theme-color" content="#FFFBF2"/>
 <title>刷题站 · 医学软件工程 / 人工智能导论</title>
 <style>
-*{box-sizing:border-box}
-:root{--green:#58CC02;--green-d:#46A302;--ink:#3C3C3C;--line:#E5E5E5;--muted:#9AA0AD}
-body{margin:0;min-height:100dvh;background:#F2F4F7;color:var(--ink);
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --green:#58CC02; --green-d:#46A302; --green-l:#D7FFB8;
+  --blue:#1CB0F6; --blue-d:#1899D6; --purple:#CE82FF; --purple-d:#A568CC;
+  --gold:#FFC800; --gold-d:#E0A800; --red:#FF4B4B;
+  --ink:#3C3C3C; --muted:#AFAFAF; --line:#E5E5E5; --cream:#FFFBF2;
+}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--cream);color:var(--ink);overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
-  display:flex;justify-content:center}
-.wrap{width:100%;max-width:520px;padding:28px 18px 40px;background:#fff;min-height:100dvh;
-  box-shadow:0 0 60px rgba(20,30,60,.06)}
-.logo{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:900;color:var(--green-d)}
-.logo svg{width:30px;height:30px}
-.sub{font-size:12.5px;color:var(--muted);margin:6px 0 22px;line-height:1.7}
-.card{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:18px;padding:16px;
-  margin-bottom:12px;text-decoration:none;color:inherit;cursor:pointer;box-shadow:0 4px 0 var(--line);
-  transition:transform .07s, box-shadow .07s}
-.card:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
-.card .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  font-size:22px;flex:none;background:#F0FFF0}
-.card h3{margin:0;font-size:16px;font-weight:900;letter-spacing:-.01em}
-.card p{margin:3px 0 0;font-size:11.5px;color:var(--muted);font-weight:700}
-.card .arrow{margin-left:auto;color:#CFCFCF;font-weight:900;font-size:16px}
-.foot{margin-top:22px;font-size:11px;color:#B5B5B5;line-height:1.8}
+  -webkit-font-smoothing:antialiased;
+}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.circle{position:absolute;border-radius:50%;opacity:.5}
+.c1{width:280px;height:280px;background:#DFFFC0;left:-90px;top:-70px}
+.c2{width:220px;height:220px;background:#D6F0FF;right:-70px;top:110px}
+.c3{width:340px;height:340px;background:#FFF3C9;left:-120px;bottom:-140px}
+.c4{width:180px;height:180px;background:#FFE3F3;right:-50px;bottom:40px}
+
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:20px 20px 46px}
+
+/* header */
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.brand .mark{width:32px;height:32px;border-radius:10px;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;
+  box-shadow:0 3px 0 var(--green-d)}
+.brand .name{font-size:15px;font-weight:900;letter-spacing:.02em;color:var(--green-d)}
+.brand .sound{margin-left:auto;border:2px solid var(--line);background:#fff;border-radius:11px;
+  width:34px;height:34px;font-size:15px;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.brand .sound:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+
+/* mascot + bubble */
+.hero{display:flex;align-items:flex-end;gap:6px;margin:10px 0 4px}
+.mascot{width:132px;height:132px;flex:none;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+.bubble{position:relative;background:#fff;border:2px solid var(--line);border-radius:16px;padding:11px 14px;
+  font-size:13px;font-weight:800;color:#4B4B4B;box-shadow:0 4px 0 var(--line);margin-bottom:34px;line-height:1.55}
+.bubble:after{content:"";position:absolute;left:-9px;bottom:14px;width:14px;height:14px;background:#fff;
+  border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+
+h1{margin:6px 0 6px;font-size:30px;line-height:1.18;letter-spacing:-.03em;font-weight:900}
+h1 em{font-style:normal;color:var(--green-d)}
+.sub{margin:0 0 18px;font-size:13px;line-height:1.7;color:#8C8C8C;font-weight:600}
+
+/* cards */
+.card{display:block;text-decoration:none;color:inherit;position:relative;background:#fff;
+  border:2px solid var(--line);border-radius:20px;padding:16px;margin-bottom:13px;
+  box-shadow:0 5px 0 var(--line);transition:transform .07s, box-shadow .07s;overflow:hidden}
+.card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
+.card .top{display:flex;align-items:center;gap:12px}
+.card .ico{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex:none;box-shadow:0 3px 0 rgba(0,0,0,.10)}
+.card h2{margin:0;font-size:17.5px;font-weight:900;letter-spacing:-.01em}
+.card .sem{margin:2px 0 0;font-size:11px;color:#A0A0A0;font-weight:800}
+.card .arrow{margin-left:auto;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;font-weight:900;color:#fff;flex:none}
+.card .chips{display:flex;gap:6px;margin-top:13px;flex-wrap:wrap}
+.card .chips span{font-size:11px;font-weight:800;padding:4px 9px;border-radius:8px;background:#F7F7F7;
+  border:1.5px solid var(--line);color:#6F6F6F}
+.card .prog{margin-top:13px;height:12px;border-radius:99px;background:#F1F1F1;overflow:hidden;position:relative}
+.card .prog i{display:block;height:100%;border-radius:99px;width:0;
+  background:linear-gradient(90deg,var(--c1),var(--c2));box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
+.card .prog b{position:absolute;right:8px;top:-2px;font-size:9px;color:#B5B5B5;display:none}
+
+.k1{--c1:#58CC02;--c2:#8BE04A}
+.k2{--c1:#1CB0F6;--c2:#6FD4FF}
+.k1 .ico{background:#E8FFD6}
+.k1 .arrow{background:var(--green);box-shadow:0 3px 0 var(--green-d)}
+.k2 .ico{background:#DFF4FF}
+.k2 .arrow{background:var(--blue);box-shadow:0 3px 0 var(--blue-d)}
+
+.section{display:flex;align-items:center;gap:8px;margin:22px 0 10px}
+.section .t{font-size:12px;font-weight:900;letter-spacing:.1em;color:#B0B0B0}
+.section .line{flex:1;height:2px;background:var(--line);border-radius:2px}
+
+.foot{margin-top:22px;font-size:11.5px;line-height:1.9;color:#A8A8A8}
+.foot b{color:#7B7B7B;font-weight:900}
+.foot .warn{margin-top:12px;padding:12px 14px;border-radius:14px;background:#FFF6DB;
+  border:2px solid #FFE8A3;color:#9A6A00;font-size:11.5px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="logo">
-    <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#58CC02"/><text x="32" y="44" font-size="26" font-weight="bold" text-anchor="middle" fill="#fff" font-family="sans-serif">✓</text></svg>
-    刷题站
-  </div>
-  <div class="sub">选一门课开始。进度自动保存在你自己的浏览器里，换人换设备互不影响，不用注册。</div>
+<div class="bg"><span class="circle c1"></span><span class="circle c2"></span><span class="circle c3"></span><span class="circle c4"></span></div>
 
-  <a class="card" href="ruangong.html">
-    <span class="ic">🩺</span>
-    <div><h3>医学软件工程</h3><p>182 题 · 40 个知识点 · 5 个期末考点</p></div>
-    <span class="arrow">›</span>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">✓</div>
+    <div class="name">刷题站</div>
+    <button class="sound" id="soundBtn" title="音效">🔊</button>
+  </div>
+
+  <div class="hero">
+    <!-- 吉祥物：手绘 SVG，原创 -->
+    <svg class="mascot" viewBox="0 0 160 160" aria-label="吉祥物">
+      <ellipse cx="80" cy="150" rx="40" ry="6" fill="#000" opacity=".08"/>
+      <path d="M80 18c34 0 52 24 52 58 0 30-22 52-52 52S28 106 28 76c0-34 18-58 52-58z" fill="#58CC02"/>
+      <path d="M80 34c24 0 36 16 36 40 0 22-16 36-36 36S44 96 44 74c0-24 12-40 36-40z" fill="#8BE04A" opacity=".45"/>
+      <path d="M66 21c-2-8 2-13 9-15M94 21c2-8-2-13-9-15" stroke="#46A302" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <circle cx="62" cy="72" r="17" fill="#fff"/>
+      <circle cx="98" cy="72" r="17" fill="#fff"/>
+      <circle cx="65" cy="74" r="8" fill="#2B2B2B"/>
+      <circle cx="101" cy="74" r="8" fill="#2B2B2B"/>
+      <circle cx="68" cy="71" r="2.8" fill="#fff"/>
+      <circle cx="104" cy="71" r="2.8" fill="#fff"/>
+      <path d="M80 92l-9 9h18z" fill="#FF9600"/>
+      <circle cx="44" cy="94" r="6" fill="#FFB3B3" opacity=".85"/>
+      <circle cx="116" cy="94" r="6" fill="#FFB3B3" opacity=".85"/>
+      <ellipse cx="28" cy="100" rx="9" ry="17" fill="#46A302" transform="rotate(-14 28 100)"/>
+      <ellipse cx="132" cy="100" rx="9" ry="17" fill="#46A302" transform="rotate(14 132 100)"/>
+      <ellipse cx="64" cy="130" rx="10" ry="5.5" fill="#FF9600"/>
+      <ellipse cx="96" cy="130" rx="10" ry="5.5" fill="#FF9600"/>
+    </svg>
+    <div class="bubble">今天想刷哪门？<br>登录后还能跟同学比排名 🏆</div>
+  </div>
+
+  <h1>期末了，<br>一起把题<em>刷完</em>。</h1>
+  <p class="sub">两门课、429 道题，按知识点归类，每题都有解析。<br>不用下载，进度云端同步。</p>
+
+  <div class="section"><span class="t">选择课程</span><span class="line"></span></div>
+
+  <a class="card k1" href="ruangong.html">
+    <div class="top">
+      <div class="ico">🩺</div>
+      <div><h2>医学软件工程</h2><p class="sem">2026-2027 第一学期</p></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="chips"><span>182 题</span><span>40 知识点</span><span>5 个期末考点</span></div>
+    <div class="prog"><i style="width:100%"></i></div>
   </a>
 
-  <a class="card" href="daolun.html">
-    <span class="ic">🤖</span>
-    <div><h3>人工智能导论</h3><p>247 题 · 67 个知识点 · 8 次作业</p></div>
-    <span class="arrow">›</span>
+  <a class="card k2" href="daolun.html">
+    <div class="top">
+      <div class="ico">🤖</div>
+      <div><h2>人工智能导论</h2><p class="sem">第一章 ～ 第十一章</p></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="chips"><span>247 题</span><span>67 知识点</span><span>8 次作业</span></div>
+    <div class="prog"><i style="width:100%"></i></div>
   </a>
 
   <div class="foot">
-    题目与解析来自课程作业与知识点练习记录，仅供复习使用。<br>
-    如果打不开或没有进度，试试用系统浏览器（Safari / Chrome）打开，而不是微信内置浏览器。
+    <b>怎么用</b>：点课程 → 右上角登录（邮箱 + 密码，随便填）→ 设置昵称头像 → 开始刷。<br>
+    不登录也能刷，进度存本机；登录后同步云端并参与排行榜。<br>
+    题目与解析来自课程作业与知识点练习记录，仅供复习使用。
+    <div class="warn">微信里打开如果没进度：点右上角「···」→「在浏览器打开」。</div>
   </div>
 </div>
+
+<script>
+(function(){
+  var on = localStorage.getItem("quiz_sound") !== "0";
+  var btn = document.getElementById("soundBtn");
+  function paint(){ btn.textContent = on ? "🔊" : "🔇"; btn.style.opacity = on ? "1" : ".5"; }
+  paint();
+  var AC = null;
+  function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+  function beep(freq, dur, type, vol){
+    if(!on) return; var c = ac(); if(!c) return;
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, c.currentTime);
+    g.gain.linearRampToValueAtTime(vol || 0.08, c.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  }
+  function tapSound(){ beep(880, .08, "triangle", .05); }
+  btn.onclick = function(){
+    on = !on; localStorage.setItem("quiz_sound", on ? "1" : "0"); paint();
+    if(on) { beep(660,.09,"triangle",.06); setTimeout(function(){ beep(990,.12,"triangle",.06); }, 90); }
+  };
+  document.querySelectorAll(".card").forEach(function(a){
+    a.addEventListener("pointerdown", tapSound);
+    a.addEventListener("click", function(){
+      beep(523,.08,"sine",.07); setTimeout(function(){ beep(784,.14,"sine",.07); }, 80);
+    });
+  });
+})();
+</script>
 </body>
 </html>
