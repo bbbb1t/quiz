@@ -100,24 +100,39 @@ h1 em{font-style:normal;color:var(--green-d)}
 
   <div class="hero">
     <!-- 吉祥物：手绘 SVG，原创 -->
-    <svg class="mascot" viewBox="0 0 160 160" aria-label="吉祥物">
-      <ellipse cx="80" cy="150" rx="40" ry="6" fill="#000" opacity=".08"/>
-      <path d="M80 18c34 0 52 24 52 58 0 30-22 52-52 52S28 106 28 76c0-34 18-58 52-58z" fill="#58CC02"/>
-      <path d="M80 34c24 0 36 16 36 40 0 22-16 36-36 36S44 96 44 74c0-24 12-40 36-40z" fill="#8BE04A" opacity=".45"/>
-      <path d="M66 21c-2-8 2-13 9-15M94 21c2-8-2-13-9-15" stroke="#46A302" stroke-width="6" stroke-linecap="round" fill="none"/>
-      <circle cx="62" cy="72" r="17" fill="#fff"/>
-      <circle cx="98" cy="72" r="17" fill="#fff"/>
-      <circle cx="65" cy="74" r="8" fill="#2B2B2B"/>
-      <circle cx="101" cy="74" r="8" fill="#2B2B2B"/>
-      <circle cx="68" cy="71" r="2.8" fill="#fff"/>
-      <circle cx="104" cy="71" r="2.8" fill="#fff"/>
-      <path d="M80 92l-9 9h18z" fill="#FF9600"/>
-      <circle cx="44" cy="94" r="6" fill="#FFB3B3" opacity=".85"/>
-      <circle cx="116" cy="94" r="6" fill="#FFB3B3" opacity=".85"/>
-      <ellipse cx="28" cy="100" rx="9" ry="17" fill="#46A302" transform="rotate(-14 28 100)"/>
-      <ellipse cx="132" cy="100" rx="9" ry="17" fill="#46A302" transform="rotate(14 132 100)"/>
-      <ellipse cx="64" cy="130" rx="10" ry="5.5" fill="#FF9600"/>
-      <ellipse cx="96" cy="130" rx="10" ry="5.5" fill="#FF9600"/>
+    <svg class="mascot" viewBox="0 0 160 160" aria-label="吉祥物小猴子">
+      <ellipse cx="80" cy="152" rx="38" ry="6" fill="#000" opacity=".08"/>
+      <!-- 尾巴 -->
+      <path d="M116 124c16-2 24-16 17-26-5-7-15-6-17 1" stroke="#8A5A34" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <!-- 身体 -->
+      <ellipse cx="80" cy="120" rx="27" ry="24" fill="#C98A5B"/>
+      <ellipse cx="80" cy="124" rx="16" ry="16" fill="#F3D8BE"/>
+      <!-- 手臂 -->
+      <ellipse cx="50" cy="116" rx="8.5" ry="15" fill="#C98A5B" transform="rotate(16 50 116)"/>
+      <ellipse cx="110" cy="116" rx="8.5" ry="15" fill="#C98A5B" transform="rotate(-16 110 116)"/>
+      <!-- 耳朵 -->
+      <circle cx="34" cy="62" r="17" fill="#C98A5B"/>
+      <circle cx="126" cy="62" r="17" fill="#C98A5B"/>
+      <circle cx="34" cy="62" r="9.5" fill="#F3D8BE"/>
+      <circle cx="126" cy="62" r="9.5" fill="#F3D8BE"/>
+      <!-- 头顶呆毛 -->
+      <path d="M80 26c-5-9-1-15 7-17" stroke="#8A5A34" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <!-- 头 -->
+      <circle cx="80" cy="70" r="46" fill="#C98A5B"/>
+      <!-- 脸 -->
+      <ellipse cx="80" cy="80" rx="35" ry="31" fill="#F3D8BE"/>
+      <!-- 眼睛 -->
+      <circle cx="63" cy="66" r="11.5" fill="#2B2B2B"/>
+      <circle cx="97" cy="66" r="11.5" fill="#2B2B2B"/>
+      <circle cx="66.5" cy="62.5" r="4" fill="#fff"/>
+      <circle cx="100.5" cy="62.5" r="4" fill="#fff"/>
+      <!-- 鼻子 -->
+      <ellipse cx="80" cy="83" rx="6.5" ry="5" fill="#8A5A34"/>
+      <!-- 嘴 -->
+      <path d="M71 94q9 8 18 0" stroke="#8A5A34" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <!-- 腮红 -->
+      <circle cx="50" cy="86" r="6.5" fill="#FFB3B3" opacity=".8"/>
+      <circle cx="110" cy="86" r="6.5" fill="#FFB3B3" opacity=".8"/>
     </svg>
     <div class="bubble">今天想刷哪门？<br>登录后还能跟同学比排名 🏆</div>
   </div>
@@ -162,7 +177,14 @@ h1 em{font-style:normal;color:var(--green-d)}
   function paint(){ btn.textContent = on ? "🔊" : "🔇"; btn.style.opacity = on ? "1" : ".5"; }
   paint();
   var AC = null;
-  function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+  function ac(){
+    if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(AC && AC.state === "suspended"){ try{ AC.resume(); }catch(e){} }
+    return AC;
+  }
+  ["pointerdown","touchstart","keydown"].forEach(function(t){
+    document.addEventListener(t, function(){ ac(); }, {passive:true, once:true});
+  });
   function beep(freq, dur, type, vol){
     if(!on) return; var c = ac(); if(!c) return;
     var o = c.createOscillator(), g = c.createGain();

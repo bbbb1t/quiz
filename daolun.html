@@ -881,7 +881,7 @@ function bind(){
           await doSync(); S.view="home"; render(); toast("已登录");
         }catch(e){ msg.textContent=e.message; msg.style.color="#D33131"; }
       }
-      else if(act==="menu"){ openMenu(); }
+      else if(act==="menu"){ sfx("tap"); openMenu(); }
       else if(act==="pickAvatar"){
         var f = $("#avaFile");
         if (f) f.click();
@@ -942,7 +942,7 @@ function bind(){
         commit(q3,judge(q3,S.pick),S.pick.slice(),false); S.pick=[]; }
       else if(act==="reveal"){ var q4=QM[S.deck[S.idx]]; if(S.ans[q4.id]) return; commit(q4,false,null,true); }
       else if(act==="prev"){ if(S.idx>0){ S.idx--; S.pick=[]; render(); } }
-      else if(act==="next"){ if(S.idx<S.deck.length-1){ S.idx++; S.pick=[]; render(); } else { S.view="summary"; render(); } }
+      else if(act==="next"){ sfx("tap"); if(S.idx<S.deck.length-1){ S.idx++; S.pick=[]; render(); } else { S.view="summary"; render(); } }
       else if(act==="again"){ var w=S.deck.filter(function(id){var a=S.ans[id]; return a&&!a.ok;});
         startDeck(w.length?w:S.deck.slice(), w.length?"错题重做":S.title); }
     };
@@ -950,7 +950,18 @@ function bind(){
 }
 var SFX_ON = (localStorage.getItem("quiz_sound") !== "0");
 var _AC = null;
-function _ac(){ if(!_AC){ try{ _AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } return _AC; }
+function _ac(){
+  if(!_AC){ try{ _AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(_AC && _AC.state === "suspended"){ try{ _AC.resume(); }catch(e){} }
+  return _AC;
+}
+(function(){
+  function unlock(){ var c = _ac(); if(c && c.state === "suspended"){ try{ c.resume(); }catch(e){} } }
+  ["pointerdown","touchstart","keydown"].forEach(function(t){
+    document.addEventListener(t, unlock, {passive:true, once:true});
+  });
+  document.addEventListener("click", unlock, {passive:true, once:true});
+})();
 function _beep(freq, dur, type, vol, delay){
   if(!SFX_ON) return;
   var c = _ac(); if(!c) return;
