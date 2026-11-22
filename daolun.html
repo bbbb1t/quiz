@@ -261,6 +261,8 @@ details.grp[open]>summary .ar{transform:rotate(90deg)}
   font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;
   transition:.2s;z-index:80;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.on{opacity:1;transform:translateX(-50%)}
+.qimgs{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.qimgs img{width:100%;height:auto;border:2px solid var(--line);border-radius:12px;background:#fff;display:block}
 </style>
 </head>
 <body>
@@ -481,7 +483,8 @@ function viewStudy(){
     +(q.nan?'<span class="chip nan">难点</span>':'')
     +(q.mian?'<span class="chip mian">免考</span>':'')
     +'<button class="fav'+(isFav(q.id)?" on":"")+'" data-act="fav">'+(isFav(q.id)?"★":"☆")+'</button></div>'
-    +'<div class="stem">'+esc(q.stem).split("\n").join("<br>")+'</div>';
+    +'<div class="stem">'+esc(q.stem).split("\n").join("<br>")+'</div>'
+    +((q.imgs && q.imgs.length) ? '<div class="qimgs">'+q.imgs.map(function(u){return '<img src="'+u+'" alt="题目配图">';}).join('')+'</div>' : '');
 
   if(q.kind==="text"){
     h+='<div class="opts"><button class="opt" data-act="reveal"><span class="k">?</span><span>简答题：先自己想，再点“看参考答案”</span></button></div>';
