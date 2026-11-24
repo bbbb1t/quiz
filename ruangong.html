@@ -215,6 +215,16 @@ details.grp[open]>summary .ar{transform:rotate(90deg)}
 .kdrow-n{margin-left:auto;font-size:11.5px;color:#9A9A9A;font-weight:800}
 .kdrow-a{color:#CFCFCF;font-weight:900;font-size:15px}
 
+.shortcut{display:flex;align-items:center;gap:12px;width:100%;margin-top:9px;padding:14px 16px;
+  background:#fff;border:2px solid var(--line);border-radius:16px;box-shadow:0 4px 0 var(--line);
+  font-family:inherit;cursor:pointer;text-align:left}
+.shortcut:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.shortcut .ic{width:40px;height:40px;border-radius:12px;background:#FFF6E0;display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex:none}
+.shortcut .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.shortcut .tx b{font-size:15px;font-weight:900;color:var(--ink)}
+.shortcut .tx small{font-size:11.5px;color:#9A9A9A;font-weight:700}
+.shortcut .go{margin-left:auto;color:#C9C9C9;font-weight:900;font-size:18px}
 .menu-list{display:flex;flex-direction:column;gap:9px;margin-top:6px}
 .mi{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid var(--line);
   background:#fff;border-radius:14px;padding:13px 14px;font-family:inherit;font-size:14px;font-weight:800;
@@ -430,6 +440,15 @@ async function doSync(){
 
 /* ---------- home ---------- */
 var GOAL = 20;
+function textQids(){ return Q.filter(function(q){return q.kind==="text";}).map(function(q){return q.id;}); }
+function shortcutCard(){
+  var ids = textQids();
+  if(!ids.length) return "";
+  return '<button class="shortcut" data-act="shorts">'
+    + '<span class="ic">✍️</span>'
+    + '<span class="tx"><b>简答题训练</b><small>' + ids.length + ' 道 · 先自己写，再看参考答案</small></span>'
+    + '<span class="go">›</span></button>';
+}
 function viewHome(){
   var g=gStats(), dn=dailyCount();
   var h='';
@@ -457,7 +476,8 @@ function viewHome(){
     +'<div class="quick" style="grid-template-columns:repeat(2,1fr);margin-top:9px">'
     +'<button data-act="rank" style="flex-direction:row;gap:8px;padding:12px"><em style="background:#FFF3D6">🏆</em>排行榜</button>'
     +'<button data-act="me" style="flex-direction:row;gap:8px;padding:12px"><em style="background:#EAF7FF">👤</em>我的档案</button>'
-    +'</div>';
+    +'</div>'
+    +shortcutCard();
 
   if(DATA.kaodian && DATA.kaodian.length){
     h+='<div class="sec"><span class="t">期末重点 · 老师 PPT</span><button class="l" data-act="kd">全部 ›</button></div>';
@@ -692,6 +712,7 @@ function openMenu(){
   h += '<button class="mi" data-act="kp"><span>📚</span>知识点<i>›</i></button>';
   h += '<button class="mi" data-act="wrong"><span>✏️</span>错题本<i>›</i></button>';
   h += '<button class="mi" data-act="fav"><span>⭐</span>收藏<i>›</i></button>';
+  if(textQids().length) h += '<button class="mi" data-act="shorts"><span>✍️</span>简答题训练<i>›</i></button>';
   h += '<button class="mi" data-act="settings"><span>⚙</span>设置与备份<i>›</i></button>';
   h += '</div>';
   $("#sheet").innerHTML = h;
@@ -944,6 +965,12 @@ function bind(){
           S.ans=store.resume.ans||{}; S.title=store.resume.title||""; S.stat={r:0,w:0}; S.t0=Date.now();
           S.view="study"; render();
         } else { var c=CH[0]; startDeck(c.qids,c.name); }
+      }
+      else if(act==="shorts"){
+        sfx("tap");
+        var _t = textQids();
+        if(!_t.length){ toast("本课暂无简答题"); return; }
+        startDeck(_t, "简答题训练");
       }
       else if(act==="random"){ var ids=Q.map(function(q){return q.id;}).sort(function(){return Math.random()-.5;}).slice(0,20);
         startDeck(ids,"随机 20 题"); }
